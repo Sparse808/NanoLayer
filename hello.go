@@ -51,6 +51,24 @@ func main() {
 	w.ShowAndRun()
 }
 
+type inspector struct {
+	selected bool
+	title    widget.Label
+	rect     DraggableRect
+	rectPos  widget.Label
+}
+
+func NewInspector() *inspector {
+	insp := &inspector{
+		selected: false,
+		title:    *widget.NewLabel("object"),
+		rectPos:  *widget.NewLabel("00"),
+	}
+
+	insp.rect.ExtendBaseWidget()
+	return insp
+}
+
 type DraggableRect struct {
 	widget.BaseWidget
 	rect        *canvas.Rectangle
@@ -110,7 +128,6 @@ func (r *draggableRectRenderer) Objects() []fyne.CanvasObject {
 func (r *draggableRectRenderer) Destroy() {}
 
 func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
-	fmt.Println(&r)
 	r.inspector.SetText(fmt.Sprintf("%p", r))
 }
 
