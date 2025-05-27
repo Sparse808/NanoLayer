@@ -24,25 +24,23 @@ func main() {
 	noLayout := container.NewWithoutLayout(gridBackground)
 
 	//inspector section
-	inspectorTitle := widget.NewLabel("Inspector")
-	inspectedRect := widget.NewLabel("rect")
+	inspector := NewInspector()
 
 	//side panel layout
 	toolsSection := container.NewVBox()
-	inspecterSection := container.NewVBox(inspectorTitle, inspectedRect)
 
 	//toolsSection
 	title := widget.NewLabel("Tools")
 	but1 := widget.NewButton("box", func() {
 		fmt.Println("pressed")
 
-		noLayout.Objects = append(noLayout.Objects, NewDraggableRect(70, 70, *gridBackground, inspectedRect))
+		noLayout.Objects = append(noLayout.Objects, NewDraggableRect(70, 70, *gridBackground, inspector))
 	})
 
 	toolsSection.Objects = append(toolsSection.Objects, title)
 	toolsSection.Objects = append(toolsSection.Objects, but1)
 
-	sidePanel := container.NewHBox(layout.NewSpacer(), toolsSection, inspecterSection)
+	sidePanel := container.NewHBox(layout.NewSpacer(), toolsSection, inspector)
 
 	myLayout := container.NewHBox(layout.NewSpacer(), noLayout, layout.NewSpacer(), sidePanel)
 
@@ -51,32 +49,68 @@ func main() {
 	w.ShowAndRun()
 }
 
-type inspector struct {
+// Inspector Code
+type Inspector struct {
+	widget.BaseWidget
 	selected bool
 	title    widget.Label
 	rect     DraggableRect
 	rectPos  widget.Label
 }
 
-func NewInspector() *inspector {
-	insp := &inspector{
+func NewInspector() *Inspector {
+	insp := &Inspector{
 		selected: false,
 		title:    *widget.NewLabel("object"),
 		rectPos:  *widget.NewLabel("00"),
 	}
 
-	insp.rect.ExtendBaseWidget()
+	insp.ExtendBaseWidget(insp)
 	return insp
 }
 
+func (insp *Inspector) CreateRenderer() fyne.WidgetRenderer {
+	return &inspectorRenderer{
+		objects: []fyne.CanvasObject{&insp.title, &insp.rectPos},
+	}
+}
+
+type inspectorRenderer struct {
+	objects []fyne.CanvasObject
+}
+
+func (r *inspectorRenderer) Layout(size fyne.Size) {
+	// Fill the entire widget space
+
+}
+
+func (r *inspectorRenderer) MinSize() fyne.Size {
+	return fyne.NewSize(100, 100)
+}
+
+func (r *inspectorRenderer) Refresh() {
+
+}
+
+func (r *inspectorRenderer) BackgroundColor() color.Color {
+	return color.Transparent
+}
+
+func (r *inspectorRenderer) Objects() []fyne.CanvasObject {
+	return r.objects
+}
+
+func (r *inspectorRenderer) Destroy() {}
+
+// DraggableRect widget code
 type DraggableRect struct {
 	widget.BaseWidget
 	rect        *canvas.Rectangle
 	gridGrounds canvas.Rectangle
-	inspector   *widget.Label
+	inspector   *Inspector
 }
 
-func NewDraggableRect(x, y float32, grounds canvas.Rectangle, inspector *widget.Label) *DraggableRect {
+func NewDraggableRect(x, y float32, grounds canvas.Rectangle, inspector *Inspector) *DraggableRect {
 	dr := &DraggableRect{
 		rect:        canvas.NewRectangle(color.NRGBA{R: 255, G: 100, B: 100, A: 255}),
 		gridGrounds: grounds,
@@ -128,7 +162,9 @@ func (r *draggableRectRenderer) Objects() []fyne.CanvasObject {
 func (r *draggableRectRenderer) Destroy() {}
 
 func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
-	r.inspector.SetText(fmt.Sprintf("%p", r))
+	//r.inspector.SetText(fmt.Sprintf("%p", r))
+	r.inspector.rectPos.SetText(fmt.Sprintf("%p", r))
+	r.inspector.Refresh()
 }
 
 // Dragged interface implementations
