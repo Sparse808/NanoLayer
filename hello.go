@@ -54,7 +54,7 @@ type Inspector struct {
 	widget.BaseWidget
 	selected bool
 	title    widget.Label
-	rect     DraggableRect
+	rect     *DraggableRect
 	rectPos  widget.Label
 }
 
@@ -71,16 +71,23 @@ func NewInspector() *Inspector {
 
 func (insp *Inspector) CreateRenderer() fyne.WidgetRenderer {
 	return &inspectorRenderer{
-		objects: []fyne.CanvasObject{&insp.title, &insp.rectPos},
+		inspector: insp,
+		objects:   []fyne.CanvasObject{&insp.title, &insp.rectPos},
 	}
 }
 
 type inspectorRenderer struct {
-	objects []fyne.CanvasObject
+	inspector *Inspector
+	objects   []fyne.CanvasObject
 }
 
 func (r *inspectorRenderer) Layout(size fyne.Size) {
 	// Fill the entire widget space
+	r.objects[0].Move(fyne.NewPos(0, 0))              // title
+	r.objects[0].Resize(fyne.NewSize(size.Width, 20)) // resize as needed
+
+	r.objects[1].Move(fyne.NewPos(0, 25)) // rectPos
+	r.objects[1].Resize(fyne.NewSize(size.Width, 20))
 
 }
 
@@ -89,6 +96,10 @@ func (r *inspectorRenderer) MinSize() fyne.Size {
 }
 
 func (r *inspectorRenderer) Refresh() {
+	if r.inspector.rect != nil {
+		r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.inspector.rect.Position().X, r.inspector.rect.Position().Y))
+		r.objects[1].Refresh()
+	}
 
 }
 
@@ -163,7 +174,9 @@ func (r *draggableRectRenderer) Destroy() {}
 
 func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 	//r.inspector.SetText(fmt.Sprintf("%p", r))
-	r.inspector.rectPos.SetText(fmt.Sprintf("%p", r))
+	r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.Position().X, r.Position().Y))
+	r.inspector.rect = r
+	r.inspector.selected = true
 	r.inspector.Refresh()
 }
 
@@ -187,6 +200,7 @@ func (r *DraggableRect) Dragged(e *fyne.DragEvent) {
 	}
 
 	r.Move(newPos) // Move the widget itself
+	r.inspector.Refresh()
 }
 
 func (r *DraggableRect) DragEnd() {}
