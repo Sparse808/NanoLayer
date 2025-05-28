@@ -123,7 +123,7 @@ func NewInspector(sb *selectedBorder) *Inspector {
 func (insp *Inspector) CreateRenderer() fyne.WidgetRenderer {
 	return &inspectorRenderer{
 		inspector: insp,
-		objects:   []fyne.CanvasObject{&insp.title, &insp.rectPos},
+		objects:   []fyne.CanvasObject{&insp.title, &insp.rectPos, &insp.sb.top},
 	}
 }
 
