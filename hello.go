@@ -17,13 +17,12 @@ func main() {
 	a := app.New()
 	w := a.NewWindow("Draggable Rectangle")
 
-	edit := newEditor()
-
-	editorLayout := container.NewWithoutLayout(edit)
-
 	//inspector section
 
 	inspector := NewInspector()
+	edit := newEditor(inspector)
+
+	editorLayout := container.NewWithoutLayout(edit)
 
 	//side panel layout
 	toolsSection := container.NewVBox()
@@ -52,12 +51,14 @@ type editor struct {
 	widget.BaseWidget
 	background *canvas.Rectangle
 	sb         *selectedBorder
+	inspector  *Inspector
 }
 
-func newEditor() *editor {
+func newEditor(insp *Inspector) *editor {
 	newEditor := &editor{
 		background: canvas.NewRectangle(color.Black),
 		sb:         newSelectedBorder(),
+		inspector:  insp,
 	}
 
 	newEditor.background.Resize(fyne.NewSize(100, 300))
@@ -78,6 +79,13 @@ type editorRenderer struct {
 }
 
 func (r *editorRenderer) Layout(size fyne.Size) {
+	if r.edit.inspector.rect != nil {
+		r.edit.sb.top.Position1 = r.edit.inspector.rect.Position()
+		r.edit.sb.top.Position2 = fyne.NewPos(r.edit.inspector.rect.Position().X, r.edit.inspector.rect.Position().Y+r.edit.inspector.rect.Size().Height)
+		r.edit.sb.top.StrokeColor = color.White
+		r.edit.sb.top.StrokeWidth = 5
+		r.Refresh()
+	}
 
 }
 
@@ -276,6 +284,7 @@ func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 	r.inspector.rect = r
 	r.inspector.selected = true
 	r.inspector.Refresh()
+
 }
 
 // Dragged interface implementations
