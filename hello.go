@@ -24,7 +24,8 @@ func main() {
 	noLayout := container.NewWithoutLayout(gridBackground)
 
 	//inspector section
-	inspector := NewInspector()
+	selectedBorder := newSelectedBorder()
+	inspector := NewInspector(selectedBorder)
 
 	//side panel layout
 	toolsSection := container.NewVBox()
@@ -49,6 +50,54 @@ func main() {
 	w.ShowAndRun()
 }
 
+// selected border code
+type selectedBorder struct {
+	top   canvas.Line
+	bot   canvas.Line
+	left  canvas.Line
+	right canvas.Line
+}
+
+func (sb *selectedBorder) turnOff() {
+	sb.top.Hide()
+	sb.bot.Hide()
+	sb.left.Hide()
+	sb.right.Hide()
+}
+
+func (sb *selectedBorder) turnOn() {
+	sb.top.Show()
+	sb.bot.Show()
+	sb.left.Show()
+	sb.right.Show()
+}
+
+func (sb *selectedBorder) setPosition(rect fyne.CanvasObject) {
+	sb.top.Move(rect.Position())
+	//sb.bot.Move(fyne.NewPos(rect.Position().X, rect.Position().Y+rect.Size().Width))
+	//sb.left.Move(rect.Position())
+	//sb.right.Move(fyne.NewPos(rect.Position().X+rect.MinSize().Width, rect.Position().Y))
+}
+
+func (sb *selectedBorder) setLengths(rect fyne.CanvasObject) {
+	//rectX := rect.Position().X
+	//rectY := rect.Position().Y
+	//sb.top.Resize(fyne.NewPos(rectX, rectY + rect.Size().Width))
+	sb.top.Resize(fyne.NewSize(rect.MinSize().Width, 10))
+	//sb.bot.Resize(fyne.NewPos(rectX + rect.Size().Height, rectY + rect.Size().Width))
+
+}
+
+func newSelectedBorder() *selectedBorder {
+	newsb := &selectedBorder{
+		top: *canvas.NewLine(color.White),
+	}
+
+	//newsb.ExtendBaseWidget(newsb)
+
+	return newsb
+}
+
 // Inspector Code
 type Inspector struct {
 	widget.BaseWidget
@@ -56,13 +105,15 @@ type Inspector struct {
 	title    widget.Label
 	rect     *DraggableRect
 	rectPos  widget.Label
+	sb       selectedBorder
 }
 
-func NewInspector() *Inspector {
+func NewInspector(sb *selectedBorder) *Inspector {
 	insp := &Inspector{
 		selected: false,
 		title:    *widget.NewLabel("object"),
 		rectPos:  *widget.NewLabel("00"),
+		sb:       *sb,
 	}
 
 	insp.ExtendBaseWidget(insp)
@@ -177,6 +228,8 @@ func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 	r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.Position().X, r.Position().Y))
 	r.inspector.rect = r
 	r.inspector.selected = true
+	r.inspector.sb.setPosition(r)
+	r.inspector.sb.setLengths(r)
 	r.inspector.Refresh()
 }
 
