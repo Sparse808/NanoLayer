@@ -17,15 +17,13 @@ func main() {
 	a := app.New()
 	w := a.NewWindow("Draggable Rectangle")
 
-	//screen background
-	gridBackground := canvas.NewRectangle(color.Black)
-	gridBackground.Resize(fyne.NewSize(100, 300))
+	edit := newEditor()
 
-	noLayout := container.NewWithoutLayout(gridBackground)
+	editorLayout := container.NewWithoutLayout(edit)
 
 	//inspector section
-	selectedBorder := newSelectedBorder()
-	inspector := NewInspector(selectedBorder)
+
+	inspector := NewInspector()
 
 	//side panel layout
 	toolsSection := container.NewVBox()
@@ -35,7 +33,7 @@ func main() {
 	but1 := widget.NewButton("box", func() {
 		fmt.Println("pressed")
 
-		noLayout.Objects = append(noLayout.Objects, NewDraggableRect(70, 70, *gridBackground, inspector))
+		editorLayout.Objects = append(editorLayout.Objects, NewDraggableRect(70, 70, *edit.background, inspector))
 	})
 
 	toolsSection.Objects = append(toolsSection.Objects, title)
@@ -43,12 +41,63 @@ func main() {
 
 	sidePanel := container.NewHBox(layout.NewSpacer(), toolsSection, inspector)
 
-	myLayout := container.NewHBox(layout.NewSpacer(), noLayout, layout.NewSpacer(), sidePanel)
+	myLayout := container.NewHBox(layout.NewSpacer(), editorLayout, layout.NewSpacer(), sidePanel)
 
 	w.SetContent(myLayout)
 	w.Resize(fyne.NewSize(700, 500))
 	w.ShowAndRun()
 }
+
+type editor struct {
+	widget.BaseWidget
+	background *canvas.Rectangle
+	sb         *selectedBorder
+}
+
+func newEditor() *editor {
+	newEditor := &editor{
+		background: canvas.NewRectangle(color.Black),
+		sb:         newSelectedBorder(),
+	}
+
+	newEditor.background.Resize(fyne.NewSize(100, 300))
+	newEditor.ExtendBaseWidget(newEditor)
+	return newEditor
+}
+
+func (edit *editor) CreateRenderer() fyne.WidgetRenderer {
+	return &editorRenderer{
+		edit:    edit,
+		objects: []fyne.CanvasObject{edit.background, &edit.sb.top},
+	}
+}
+
+type editorRenderer struct {
+	edit    *editor
+	objects []fyne.CanvasObject
+}
+
+func (r *editorRenderer) Layout(size fyne.Size) {
+
+}
+
+func (r *editorRenderer) MinSize() fyne.Size {
+	return fyne.NewSize(300, 300)
+}
+
+func (r *editorRenderer) Refresh() {
+
+}
+
+func (r *editorRenderer) BackgroundColor() color.Color {
+	return color.Transparent
+}
+
+func (r *editorRenderer) Objects() []fyne.CanvasObject {
+	return r.objects
+}
+
+func (r *editorRenderer) Destroy() {}
 
 // selected border code
 type selectedBorder struct {
@@ -105,15 +154,13 @@ type Inspector struct {
 	title    widget.Label
 	rect     *DraggableRect
 	rectPos  widget.Label
-	sb       selectedBorder
 }
 
-func NewInspector(sb *selectedBorder) *Inspector {
+func NewInspector() *Inspector {
 	insp := &Inspector{
 		selected: false,
 		title:    *widget.NewLabel("object"),
 		rectPos:  *widget.NewLabel("00"),
-		sb:       *sb,
 	}
 
 	insp.ExtendBaseWidget(insp)
@@ -123,7 +170,7 @@ func NewInspector(sb *selectedBorder) *Inspector {
 func (insp *Inspector) CreateRenderer() fyne.WidgetRenderer {
 	return &inspectorRenderer{
 		inspector: insp,
-		objects:   []fyne.CanvasObject{&insp.title, &insp.rectPos, &insp.sb.top},
+		objects:   []fyne.CanvasObject{&insp.title, &insp.rectPos},
 	}
 }
 
@@ -228,8 +275,6 @@ func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 	r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.Position().X, r.Position().Y))
 	r.inspector.rect = r
 	r.inspector.selected = true
-	r.inspector.sb.setPosition(r)
-	r.inspector.sb.setLengths(r)
 	r.inspector.Refresh()
 }
 
