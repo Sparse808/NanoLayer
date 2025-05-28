@@ -183,6 +183,9 @@ func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 // Dragged interface implementations
 
 func (r *DraggableRect) Dragged(e *fyne.DragEvent) {
+	if r.inspector.rect != r {
+		return
+	}
 	y := r.gridGrounds.Position().Y + r.gridGrounds.Size().Height
 	x := r.gridGrounds.Position().X + r.gridGrounds.Size().Width
 
