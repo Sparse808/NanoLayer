@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 
 	"fmt"
@@ -30,19 +31,23 @@ type inspectorRenderer struct {
 }
 
 func (insp *Inspector) CreateRenderer() fyne.WidgetRenderer {
-	return &inspectorRenderer{
-		inspector: insp,
-		objects:   []fyne.CanvasObject{&insp.title, &insp.rectPos},
+	title := widget.NewLabel("Inspector")
+	title.Alignment = fyne.TextAlignCenter
+
+	if !insp.selected {
+		blank := widget.NewLabel("No Rect Selected")
+		c := container.NewBorder(title, nil, nil, nil, blank)
+		return widget.NewSimpleRenderer(c)
 	}
+	selectedName := widget.NewLabel("Name: " + fmt.Sprintf("%p", insp.selectedRect))
+
+	name := container.NewHBox(selectedName)
+
+	return widget.NewSimpleRenderer(container.NewBorder(nil, nil, nil, nil, nil))
 }
 
 func (r *inspectorRenderer) Layout(size fyne.Size) {
 	// Fill the entire widget space
-	r.objects[0].Move(fyne.NewPos(0, 0))              // title
-	r.objects[0].Resize(fyne.NewSize(size.Width, 20)) // resize as needed
-
-	r.objects[1].Move(fyne.NewPos(0, 25)) // rectPos
-	r.objects[1].Resize(fyne.NewSize(size.Width, 20))
 
 }
 
@@ -51,10 +56,6 @@ func (r *inspectorRenderer) MinSize() fyne.Size {
 }
 
 func (r *inspectorRenderer) Refresh() {
-	if r.inspector.rect != nil {
-		r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.inspector.rect.Position().X, r.inspector.rect.Position().Y))
-		r.objects[1].Refresh()
-	}
 
 }
 

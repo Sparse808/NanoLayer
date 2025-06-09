@@ -79,9 +79,9 @@ type editorRenderer struct {
 }
 
 func (r *editorRenderer) Layout(size fyne.Size) {
-	if r.edit.inspector.rect != nil {
-		r.edit.sb.top.Position1 = r.edit.inspector.rect.Position()
-		r.edit.sb.top.Position2 = fyne.NewPos(r.edit.inspector.rect.Position().X, r.edit.inspector.rect.Position().Y+r.edit.inspector.rect.Size().Height)
+	if r.edit.inspector.selectedRect != nil {
+		r.edit.sb.top.Position1 = r.edit.inspector.selectedRect.Position()
+		r.edit.sb.top.Position2 = fyne.NewPos(r.edit.inspector.selectedRect.Position().X, r.edit.inspector.selectedRect.Position().Y+r.edit.inspector.selectedRect.Size().Height)
 		r.edit.sb.top.StrokeColor = color.White
 		r.edit.sb.top.StrokeWidth = 5
 		r.Refresh()
@@ -216,8 +216,8 @@ func (r *draggableRectRenderer) Destroy() {}
 
 func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 	//r.inspector.SetText(fmt.Sprintf("%p", r))
-	r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.Position().X, r.Position().Y))
-	r.inspector.rect = r
+	//r.inspector.rectPos.SetText(fmt.Sprintf("(%.0f, %.0f)", r.Position().X, r.Position().Y))
+	r.inspector.selectedRect = r
 	r.inspector.selected = true
 	r.inspector.Refresh()
 
@@ -226,7 +226,7 @@ func (r *DraggableRect) Tapped(e *fyne.PointEvent) {
 // Dragged interface implementations
 
 func (r *DraggableRect) Dragged(e *fyne.DragEvent) {
-	if r.inspector.rect != r {
+	if r.inspector.selectedRect != r {
 		return
 	}
 	y := r.gridGrounds.Position().Y + r.gridGrounds.Size().Height
